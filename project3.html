@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calqute ni SJ</title>
+
+  <!-- Google Fonts (cosmic, modern feel) -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+
+ <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Rajdhani', sans-serif; }
+    body {
+      height:100vh; display:flex; justify-content:center; align-items:center;
+      overflow:hidden; position:relative; transition:0.5s;
+      color:#e0f7fa;
+    }
+
+    /* ===== Background Video ===== */
+    #bgVideo {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    /* ===== THEMES ===== */
+    body.dark { background:#0a0f1c; color:#e0f7fa; }
+    body.light { background:#f2f5fa; color:#111; }
+
+    body.light #loginPage, 
+    body.light .modal-content, 
+    body.light .app-container {
+      background:rgba(255,255,255,0.92); color:#222;
+    }
+
+    body.light .display { background:#f8f8f8; color:#000; border:1px solid #ccc; }
+    body.light .keypad button { background:#ffffff; color:#000; border:1px solid #ddd; }
+    body.light .keypad button:hover { background:#00c8ff; color:#fff; }
+    body.light .history-panel { background:rgba(250,250,250,0.9); color:#000; border-left:1px solid #ddd; }
+    body.light .history-panel li { background:#eee; color:#000; }
+    body.light .menu { background:rgba(255,255,255,0.75); border-bottom:1px solid #ddd; }
+    body.light .dropdown { background:#fff; color:#000; border:1px solid #ddd; }
+    body.light .dropdown button { background:#007bff; color:#fff; }
+    body.light .dropdown button.logout-btn { background:#ff4444; }
+
+    /* ===== Login Page ===== */
+    #loginPage {
+      display:block; position:relative; width:400px;
+      background:rgba(20,20,40,0.85); backdrop-filter:blur(20px);
+      padding:30px; border-radius:20px;
+      box-shadow:0 0 30px rgba(0,0,0,0.6);
+      z-index:5; transition:0.4s;
+    }
+    #loginPage h1 {
+      text-align:center; margin-bottom:20px;
+      font-family:'Orbitron', sans-serif;
+      font-size:28px; letter-spacing:2px;
+      color:#00e5ff; text-shadow:0 0 8px #00c8ff;
+    }
+
+    #loginPage input {
+      width:100%; padding:12px; margin:10px 0;
+      border:none; border-radius:8px; font-size:16px; outline:none;
+      background:rgba(255,255,255,0.1); color:#fff;
+    }
+    #loginPage input:focus { box-shadow:0 0 10px #00e5ff; }
+
+    #loginPage button {
+      width:100%; padding:12px; margin:10px 0; font-size:16px;
+      border:none; border-radius:8px; cursor:pointer; transition:0.3s;
+      font-weight:bold; letter-spacing:1px;
+    }
+    .btn-primary { background:#007bff; color:white; }
+    .btn-primary:hover { background:#0056b3; }
+    .btn-secondary { background:#42b72a; color:white; }
+    .btn-secondary:hover { background:#2c7a1e; }
+    #loginPage a { display:block; text-align:center; margin:10px 0; color:#00e5ff; text-decoration:none; }
+    #loginPage a:hover { text-decoration:underline; }
+
+    /* ===== Password Toggle ===== */
+    .password-toggle {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .password-toggle input[type="password"], .password-toggle input[type="text"] {
+      flex: 1;
+      padding-right: 40px;
+    }
+    .password-toggle .toggle-icon {
+      position: absolute;
+      right: 10px;
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+      color: #00e5ff;
+    }
+
+    /* ===== Signup & Forgot Modal ===== */
+    .modal {
+      display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.6); justify-content:center; align-items:center; z-index:10;
+    }
+    .modal-content {
+      background:#1a1a2e; color:white; padding:25px; border-radius:16px;
+      width:350px; box-shadow:0 0 25px rgba(0,0,0,0.8);
+      animation:popIn 0.4s ease;
+      font-family:'Rajdhani', sans-serif;
+    }
+    @keyframes popIn { from{transform:scale(0.8);opacity:0;} to{transform:scale(1);opacity:1;} }
+    .modal-content input {
+      width:100%; padding:10px; margin:10px 0;
+      border:none; border-radius:8px; outline:none;
+      background:rgba(255,255,255,0.1); color:#fff;
+    }
+    .modal-content input:focus { box-shadow:0 0 8px #00e5ff; }
+    .modal-content button {
+      width:100%; padding:10px; margin:8px 0; border:none;
+      border-radius:8px; cursor:pointer; transition:0.3s;
+      font-weight:bold; letter-spacing:1px;
+    }
+    .modal-content button:hover { opacity:0.85; }
+
+    /* ===== Password Checklist ===== */
+    .pw-checklist {
+      font-size:13px; margin:5px 0 10px 10px; list-style:none;
+    }
+    .pw-checklist li { margin:3px 0; }
+
+    /* ===== Calculator Page ===== */
+    .app-container {
+      display:none; width:900px; height:600px;
+      background: rgba(20,20,40,0.65); backdrop-filter: blur(25px);
+      border-radius:20px; box-shadow:0 0 50px rgba(0,0,0,0.7);
+      overflow:hidden; position:relative; z-index:5;
+      animation:fadeIn 0.5s ease; display:flex;
+      font-family:'Rajdhani', sans-serif;
+    }
+    @keyframes fadeIn { from{opacity:0; transform:scale(0.9);} to{opacity:1; transform:scale(1);} }
+
+    .menu { position:absolute; top:0; left:0; right:0;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:12px 20px; background:rgba(0,0,0,0.35);
+      font-size:18px; font-weight:bold; font-family:'Orbitron', sans-serif;
+      color:#00e5ff; letter-spacing:1px;
+    }
+    .menu img { width:42px; height:42px; border-radius:50%; cursor:pointer; border:2px solid #00e5ff; transition:0.3s; }
+    .menu img:hover { transform:scale(1.1); }
+    .theme-toggle { cursor:pointer; padding:6px 12px; border-radius:8px; border:none; background:#00c8ff; color:#fff; font-size:14px; transition:0.3s; }
+    .theme-toggle:hover { background:#0098cc; }
+
+    /* Dropdown */
+    .dropdown {
+      position:absolute; top:60px; right:20px;
+      background:rgba(30,30,50,0.95); color:white;
+      border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.6);
+      display:none; flex-direction:column; width:260px;
+      z-index:20; padding:15px; animation:fadeIn 0.3s ease;
+    }
+    .dropdown .profile { text-align:center; margin-bottom:15px; }
+    .dropdown .profile img { width:80px; height:80px; border-radius:50%; border:2px solid #00e5ff; }
+    .dropdown .profile p { margin-top:8px; font-weight:bold; font-family:'Orbitron', sans-serif; color:#00e5ff; }
+    .dropdown input { width:100%; padding:8px; margin:6px 0; border:none; border-radius:6px; background:rgba(255,255,255,0.1); color:#fff; }
+    .dropdown button { background:#007bff; border:none; color:white; padding:10px; border-radius:6px; margin-top:6px; cursor:pointer; width:100%; transition:0.3s; }
+    .dropdown button:hover { background:#0056b3; }
+    .logout-btn { background:#ff4444; }
+    .logout-btn:hover { background:#cc0000; }
+
+    .calc-body { flex:2; display:flex; flex-direction:column; padding:70px 20px 20px; width:70%; }
+    .display { text-align:right; font-size:38px; padding:18px; margin-bottom:18px; border-radius:10px; background:rgba(0,0,0,0.55); font-weight:bold; box-shadow:inset 0 0 10px rgba(0,0,0,0.6); font-family:'Orbitron', sans-serif; color:#00e5ff; }
+    .keypad { display:grid; grid-template-columns: repeat(8, 1fr); gap:8px; }
+    .keypad button { padding:16px; font-size:16px; border:none; border-radius:8px; background:rgba(255,255,255,0.1); color:#e0f7fa; cursor:pointer; transition:0.25s; font-weight:bold; letter-spacing:1px; }
+    .keypad button:hover { background:#00e5ff; color:#fff; transform:scale(1.05); }
+
+    /* History Panel */
+    .history-panel { width:30%; background:rgba(0,0,0,0.55); padding:18px; border-left:2px solid rgba(255,255,255,0.15); overflow-y:auto; height:100%; display:flex; flex-direction:column; color:#e0f7fa; }
+    .history-panel h3 { margin-bottom:12px; font-family:'Orbitron', sans-serif; color:#00e5ff; }
+    .history-panel ul { list-style:none; padding:0; flex:1; overflow-y:auto; }
+    .history-panel li { margin:6px 0; font-size:14px; background:rgba(255,255,255,0.1); padding:6px; border-radius:6px; color:#fff; }
+    .btn-clear { margin-top:12px; background:#ff4444; border:none; padding:10px; color:white; border-radius:6px; cursor:pointer; width:100%; font-size:14px; }
+    .btn-clear:hover { background:#cc0000; }
+  </style>
+</head>
+<body class="dark">
+
+ <!-- Background Video -->
+  <video autoplay muted loop id="bgVideo">
+    <source src="univers.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+   
+  <!-- Login Page -->
+  <div id="loginPage">
+    <h1>Calqute ni SJ</h1>
+    <input type="text" id="signinUser" placeholder="Username">
+    <div class="password-toggle">
+      <input type="password" id="signinPass" placeholder="Password">
+      <span class="toggle-icon" onclick="togglePassword('signinPass', this)">👁️</span>
+    </div>
+    <button class="btn-primary" onclick="signIn()">Log In</button>
+    <a href="#" onclick="showForgotPassword()">Forgot password?</a>
+    <hr>
+    <button class="btn-secondary" onclick="showSignUp()">Create new account</button>
+  </div>
+
+  <!-- Signup Modal -->
+  <div class="modal" id="signupModal">
+    <div class="modal-content">
+      <h2>Create Account</h2>
+      <input type="text" id="signupUser" placeholder="Username">
+      <div class="password-toggle">
+        <input type="password" id="signupPass" placeholder="Password" oninput="updatePasswordChecklist(this.value,'signupChecklist')">
+        <span class="toggle-icon" onclick="togglePassword('signupPass', this)">👁️</span>
+      </div>
+      <ul id="signupChecklist" class="pw-checklist">
+        <li id="signup-length">❌ At least 8 characters</li>
+        <li id="signup-upper">❌ At least 1 uppercase letter</li>
+        <li id="signup-lower">❌ At least 1 lowercase letter</li>
+        <li id="signup-number">❌ At least 1 number</li>
+        <li id="signup-symbol">❌ At least 1 symbol</li>
+      </ul>
+      <div class="password-toggle">
+        <input type="password" id="signupConfirm" placeholder="Confirm Password">
+        <span class="toggle-icon" onclick="togglePassword('signupConfirm', this)">👁️</span>
+      </div>
+      <label>Upload Profile Picture:</label>
+      <input type="file" id="signupPic" accept="image/*">
+      <button class="btn-primary" onclick="createAccount()">Sign Up</button>
+      <button onclick="closeSignUp()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div class="modal" id="forgotModal">
+    <div class="modal-content">
+      <h2>Reset Password</h2>
+      <input type="text" id="forgotUser" placeholder="Enter Username">
+      <div class="password-toggle">
+        <input type="password" id="newPass" placeholder="Enter New Password" oninput="updatePasswordChecklist(this.value,'resetChecklist')">
+        <span class="toggle-icon" onclick="togglePassword('newPass', this)">👁️</span>
+      </div>
+      <ul id="resetChecklist" class="pw-checklist">
+        <li id="reset-length">❌ At least 8 characters</li>
+        <li id="reset-upper">❌ At least 1 uppercase letter</li>
+        <li id="reset-lower">❌ At least 1 lowercase letter</li>
+        <li id="reset-number">❌ At least 1 number</li>
+        <li id="reset-symbol">❌ At least 1 symbol</li>
+      </ul>
+      <button class="btn-primary" onclick="resetPassword()">Reset</button>
+      <button onclick="closeForgot()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Calculator Page -->
+  <div class="app-container" id="calcPage" style="display:none;">
+    <div class="menu">
+      <span>Calqute ni SJ</span>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+      <img id="menuProfile" src="https://via.placeholder.com/40" alt="Profile" onclick="toggleDropdown()">
+      <div class="dropdown" id="dropdownMenu">
+        <div class="profile">
+          <img id="dropdownPic" src="https://via.placeholder.com/70" alt="User Pic">
+          <p id="dropdownUser">Username</p>
+        </div>
+        <button onclick="document.getElementById('changePic').click()">Change Photo</button>
+        <input type="file" id="changePic" accept="image/*" style="display:none" onchange="updatePicture(event)">
+        <label>Change Password</label>
+        <div class="password-toggle">
+          <input type="password" id="changePass" placeholder="New Password" oninput="updatePasswordChecklist(this.value,'updateChecklist')">
+          <span class="toggle-icon" onclick="togglePassword('changePass', this)">👁️</span>
+        </div>
+        <ul id="updateChecklist" class="pw-checklist">
+          <li id="update-length">❌ At least 8 characters</li>
+          <li id="update-upper">❌ At least 1 uppercase letter</li>
+          <li id="update-lower">❌ At least 1 lowercase letter</li>
+          <li id="update-number">❌ At least 1 number</li>
+          <li id="update-symbol">❌ At least 1 symbol</li>
+        </ul>
+        <button onclick="updatePassword()">Update Password</button>
+        <button class="logout-btn" onclick="logout()">Log Out</button>
+      </div>
+    </div>
+
+    <div class="calc-body">
+      <div class="display" id="calcDisplay">0</div>
+      <div class="keypad" id="calcButtons"></div>
+    </div>
+
+    <div class="history-panel">
+      <h3>History</h3>
+      <ul id="historyList"></ul>
+      <button class="btn-clear" onclick="clearHistory()">Clear History</button>
+    </div>
+  </div>
+
+  <script>
+    let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
+    let currentUser = null;
+    let historyData = JSON.parse(localStorage.getItem("historyData")) || {};
+    let memory = 0;
+    let theme = localStorage.getItem("theme") || "dark";
+    document.body.className = theme;
+
+    function toggleTheme(){
+      if(document.body.classList.contains("dark")){
+        document.body.classList.replace("dark","light");
+        localStorage.setItem("theme","light");
+        document.querySelector(".theme-toggle").textContent="☀️";
+      }else{
+        document.body.classList.replace("light","dark");
+        localStorage.setItem("theme","dark");
+        document.querySelector(".theme-toggle").textContent="🌙";
+      }
+    }
+    if(theme==="light"){ document.querySelector(".theme-toggle").textContent="☀️"; }
+
+    function showSignUp(){ document.getElementById("signupModal").style.display="flex"; }
+    function closeSignUp(){ document.getElementById("signupModal").style.display="none"; }
+    function showForgotPassword(){ document.getElementById("forgotModal").style.display="flex"; }
+    function closeForgot(){ document.getElementById("forgotModal").style.display="none"; }
+
+    function togglePassword(inputId, icon){
+      const input = document.getElementById(inputId);
+      if(input.type === "password"){
+        input.type = "text";
+        icon.textContent = "🙈";
+      } else {
+        input.type = "password";
+        icon.textContent = "👁️";
+      }
+    }
+
+    // ✅ Password Checklist live update
+    function updatePasswordChecklist(password,listId){
+      const list=document.getElementById(listId);
+      if(!list) return;
+      const checks={
+        length: password.length>=8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        number: /\d/.test(password),
+        symbol: /[\W_]/.test(password)
+      };
+      Object.keys(checks).forEach(key=>{
+        const item=list.querySelector(`#${listId.split("Checklist")[0]}-${key}`);
+        if(item){
+          item.textContent=(checks[key]?"✅ ":"❌ ")+item.textContent.replace(/^✅ |^❌ /,"");
+          item.style.color=checks[key]?"limegreen":"red";
+        }
+      });
+    }
+
+    function createAccount(){
+      const user=document.getElementById("signupUser").value;
+      const pass=document.getElementById("signupPass").value;
+      const confirm=document.getElementById("signupConfirm").value;
+      const picInput=document.getElementById("signupPic").files[0];
+      if(!user||!pass||!confirm){ alert("Fill all fields"); return; }
+      if(pass!==confirm){ alert("Passwords do not match"); return; }
+      if(accounts.find(acc=>acc.user===user)){ alert("Username exists"); return; }
+      const reader=new FileReader();
+      reader.onload=function(){
+        accounts.push({user,pass,pic:reader.result});
+        localStorage.setItem("accounts",JSON.stringify(accounts));
+        alert("Account created!");
+        closeSignUp();
+      };
+      if(picInput){ reader.readAsDataURL(picInput); } else {
+        accounts.push({user,pass,pic:"https://via.placeholder.com/70"});
+        localStorage.setItem("accounts",JSON.stringify(accounts));
+        alert("Account created!");
+        closeSignUp();
+      }
+    }
+
+    function signIn(){
+      const user=document.getElementById("signinUser").value;
+      const pass=document.getElementById("signinPass").value;
+      const account=accounts.find(acc=>acc.user===user && acc.pass===pass);
+      if(account){
+        currentUser=account; localStorage.setItem("currentUser",JSON.stringify(currentUser));
+        document.getElementById("loginPage").style.display="none";
+        document.getElementById("calcPage").style.display="flex";
+        document.getElementById("dropdownUser").textContent=currentUser.user;
+        document.getElementById("menuProfile").src=currentUser.pic;
+        document.getElementById("dropdownPic").src=currentUser.pic;
+        renderHistory();
+      } else alert("Invalid login");
+    }
+
+    function resetPassword(){
+      const user=document.getElementById("forgotUser").value;
+      const newPass=document.getElementById("newPass").value;
+      const account=accounts.find(acc=>acc.user===user);
+      if(account){
+        account.pass=newPass;
+        localStorage.setItem("accounts",JSON.stringify(accounts));
+        alert("Password updated!");
+        closeForgot();
+      } else alert("User not found");
+    }
+
+    function toggleDropdown(){
+      const dd=document.getElementById("dropdownMenu");
+      dd.style.display=(dd.style.display==="flex")?"none":"flex";
+    }
+
+    function updatePicture(e){
+      const file=e.target.files[0];
+      if(!file) return;
+      const reader=new FileReader();
+      reader.onload=function(){
+        currentUser.pic=reader.result;
+        localStorage.setItem("accounts",JSON.stringify(accounts));
+        localStorage.setItem("currentUser",JSON.stringify(currentUser));
+        document.getElementById("menuProfile").src=reader.result;
+        document.getElementById("dropdownPic").src=reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updatePassword(){
+      const newPass=document.getElementById("changePass").value;
+      currentUser.pass=newPass;
+      localStorage.setItem("accounts",JSON.stringify(accounts));
+      localStorage.setItem("currentUser",JSON.stringify(currentUser));
+      alert("Password changed!");
+    }
+
+    function logout(){
+      localStorage.removeItem("currentUser");
+      document.getElementById("calcPage").style.display="none";
+      document.getElementById("loginPage").style.display="block";
+    }
+
+    // Calculator
+    const calcButtons=["7","8","9","/","C","MC","MR","M+","4","5","6","*","(",")","%","√","1","2","3","-","sin","cos","tan","^","0",".","=","+","log","ln","π","e"];
+    const btnContainer=document.getElementById("calcButtons");
+    calcButtons.forEach(label=>{
+      const btn=document.createElement("button");
+      btn.textContent=label; btn.onclick=()=>handleInput(label);
+      btnContainer.appendChild(btn);
+    });
+    let expression="";
+    function handleInput(input){
+      if(input==="C"){ expression=""; }
+      else if(input==="="){ try{ let result=evalExpression(expression); addToHistory(expression+" = "+result); expression=result.toString(); }catch{ expression="Error"; } }
+      else if(input==="MC"){ memory=0; }
+      else if(input==="MR"){ expression+=memory; }
+      else if(input==="M+"){ try{ memory+=parseFloat(evalExpression(expression)); }catch{} }
+      else if(input==="√"){ expression+="Math.sqrt("; }
+      else if(input==="sin"){ expression+="Math.sin("; }
+      else if(input==="cos"){ expression+="Math.cos("; }
+      else if(input==="tan"){ expression+="Math.tan("; }
+      else if(input==="log"){ expression+="Math.log10("; }
+      else if(input==="ln"){ expression+="Math.log("; }
+      else if(input==="π"){ expression+="Math.PI"; }
+      else if(input==="e"){ expression+="Math.E"; }
+      else if(input==="^"){ expression+="**"; }
+      else{ expression+=input; }
+      document.getElementById("calcDisplay").textContent=expression;
+    }
+    function evalExpression(expr){ return Function('"use strict"; return ('+expr+')')(); }
+
+    function addToHistory(entry){
+      if(!historyData[currentUser.user]) historyData[currentUser.user]=[];
+      historyData[currentUser.user].unshift(entry);
+      if(historyData[currentUser.user].length>20) historyData[currentUser.user].pop();
+      localStorage.setItem("historyData",JSON.stringify(historyData));
+      renderHistory();
+    }
+    function renderHistory(){
+      const list=document.getElementById("historyList"); list.innerHTML="";
+      const entries=historyData[currentUser.user]||[];
+      entries.forEach(item=>{
+        const li=document.createElement("li"); li.textContent=item; list.appendChild(li);
+      });
+    }
+    function clearHistory(){
+      historyData[currentUser.user]=[];
+      localStorage.setItem("historyData",JSON.stringify(historyData));
+      renderHistory();
+    }
+
+    // Restore session
+    window.onload=function(){
+      const saved=JSON.parse(localStorage.getItem("currentUser"));
+      if(saved){
+        currentUser=saved;
+        document.getElementById("loginPage").style.display="none";
+        document.getElementById("calcPage").style.display="flex";
+        document.getElementById("dropdownUser").textContent=currentUser.user;
+        document.getElementById("menuProfile").src=currentUser.pic;
+        document.getElementById("dropdownPic").src=currentUser.pic;
+        renderHistory();
+      }
+    };
+  </script>
+</body>
+</html>
